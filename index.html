@@ -2,167 +2,138 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xuxiang Wang</title>
+<meta name="description" content="Xuxiang Wang, PhD student in Biostatistics at the University of Nebraska Medical Center: research on access to health care and research, EHR data, and reproducible analysis.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Source+Sans+3:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-/* Layout: one narrow reading column, left-aligned; sections separated by space and a single hairline */
+/* Shared site tokens: identical on every page of the site. */
 :root {
-  --paper: #fbfbfa;
-  --ink: #1f2328;
-  --muted: #6a7078;
-  --rule: #e2e3e5;
-  --link: #2b4a6f;
-  --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
-  --font-sans: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bg: #f7f8fa; --surface: #ffffff; --ink: #12161c; --ink-2: #3d4450; --ink-3: #5b6472;
+  --rule: #dde1e7; --rule-strong: #c4cad3; --link: #1f62b8; --link-hover: #174c8f;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #17191c; --ink: #e4e6e9; --muted: #969ca4; --rule: #2c2f34; --link: #9db6d6; color-scheme: dark;
+    --bg: #111418; --surface: #181c22; --ink: #eef0f3; --ink-2: #c3c9d2; --ink-3: #9aa2ae;
+    --rule: #2a3039; --rule-strong: #3a424d; --link: #7cb0f2; --link-hover: #a6c9f6; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --paper: #17191c; --ink: #e4e6e9; --muted: #969ca4; --rule: #2c2f34; --link: #9db6d6; color-scheme: dark;
+  --bg: #111418; --surface: #181c22; --ink: #eef0f3; --ink-2: #c3c9d2; --ink-3: #9aa2ae;
+  --rule: #2a3039; --rule-strong: #3a424d; --link: #7cb0f2; --link-hover: #a6c9f6; color-scheme: dark;
 }
-
-body {
-  margin: 0;
-  background: var(--paper);
-  color: var(--ink);
-  font-family: var(--font-sans);
-  font-size: 17px;
-  line-height: 1.65;
-  -webkit-font-smoothing: antialiased;
-}
-a { color: var(--link); text-decoration: none; border-bottom: 1px solid var(--rule); }
-a:hover { border-bottom-color: var(--link); }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.6; }
+a { color: var(--link); text-decoration: none; }
+a:hover { color: var(--link-hover); text-decoration: underline; }
 a:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+.wrap { max-width: 880px; margin: 0 auto; padding-block: 32px 72px;
+  padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 56px; }
+.site-nav { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 12px 24px;
+  border-bottom: 1px solid var(--rule); padding-bottom: 16px; }
+.site-nav .name { font-weight: 600; font-size: 18px; color: var(--ink); }
+.site-nav .links { display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 15px; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 16px; font-family: var(--font-data); font-size: 12.5px; color: var(--ink-3);
+  letter-spacing: 0.02em; text-transform: uppercase; }
+.num { font-family: var(--font-data); }
+.site-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; border-top: 1px solid var(--rule);
+  padding-top: 16px; font-size: 14px; color: var(--ink-3); }
 
-.page {
-  max-width: 680px;
-  margin: 0 auto;
-  padding-block: 88px 96px;
-  padding-left: 24px;
-  padding-right: 24px;
-  display: grid;
-  gap: 64px;
-}
-
-header { display: grid; gap: 14px; }
-h1 {
-  font-family: var(--font-serif);
-  font-weight: 400;
-  font-size: 2.5rem;
-  line-height: 1.15;
-  letter-spacing: -0.005em;
-  margin: 0;
-}
-.role { margin: 0; color: var(--muted); }
-.contact { display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 0.95rem; }
-.contact span { color: var(--ink); }
-
-section { display: grid; gap: 18px; }
-h2 {
-  font-family: var(--font-serif);
-  font-weight: 600;
-  font-size: 1.1rem;
-  margin: 0;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--rule);
-}
-p { margin: 0; }
-.prose { display: grid; gap: 14px; }
-
-ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 22px; }
-.item h3 {
-  font-family: var(--font-serif);
-  font-weight: 400;
-  font-size: 1.08rem;
-  line-height: 1.45;
-  margin: 0;
-  text-wrap: balance;
-}
-.item .detail { color: var(--muted); font-size: 0.95rem; margin-top: 3px; }
-.item .detail i { font-family: var(--font-serif); }
-
-.plain { gap: 8px; }
-.plain li { display: grid; grid-template-columns: 1fr auto; gap: 16px; }
-.plain .year { color: var(--muted); font-variant-numeric: tabular-nums; }
-
-footer { color: var(--muted); font-size: 0.85rem; }
-
-@media (max-width: 480px) {
-  .page { padding-block: 56px 72px; gap: 52px; }
-  h1 { font-size: 2.1rem; }
-}
+/* Homepage */
+h1 { margin: 0; font-weight: 500; font-size: clamp(34px, 6vw, 44px); line-height: 1.1; letter-spacing: -0.02em; }
+h2 { margin: 0; font-weight: 600; font-size: 24px; letter-spacing: -0.01em; }
+h3 { margin: 0; font-weight: 600; font-size: 19px; line-height: 1.35; text-wrap: balance; }
+p { margin: 0; color: var(--ink-2); max-width: 66ch; }
+header { display: flex; flex-direction: column; gap: 16px; }
+.role { font-size: 18px; }
+.contact { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 15px; }
+section { display: flex; flex-direction: column; gap: 20px; }
+.entries article { display: flex; flex-direction: column; gap: 8px; padding: 20px 0; border-top: 1px solid var(--rule); }
+.entries article:last-child { border-bottom: 1px solid var(--rule); }
+.entries .more { font-size: 15px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 20px; }
+.card { display: flex; flex-direction: column; gap: 10px; padding: 22px; background: var(--surface); border: 1px solid var(--rule);
+  border-radius: 8px; color: var(--ink); }
+.card:hover { border-color: var(--rule-strong); text-decoration: none; color: var(--ink); }
+.card .title { font-weight: 600; font-size: 18px; line-height: 1.35; }
+.card .summary { color: var(--ink-2); font-size: 15px; }
+.card .go { color: var(--link); font-size: 15px; }
 </style>
 </head>
 <body>
+<div class="wrap">
 
-<div class="page">
-  <header>
-    <h1>Xuxiang Wang</h1>
-    <p class="role">PhD Student in Biostatistics, College of Public Health,<br>University of Nebraska Medical Center</p>
-    <div class="contact">
-      <span>xuxwang@unmc.edu</span>
-      <a href="#">CV</a>
-      <a href="https://github.com/xuxiang-wang">GitHub</a>
-      <a href="https://www.linkedin.com/">LinkedIn</a>
-      <a href="https://scholar.google.com/">Google Scholar</a>
-    </div>
-  </header>
+<nav class="site-nav" aria-label="Site">
+  <a class="name" href="./">Xuxiang Wang</a>
+  <div class="links">
+    <a href="#research">Research</a>
+    <a href="#projects">Projects</a>
+    <a href="https://github.com/xuxiang-wang">GitHub</a>
+  </div>
+</nav>
 
-  <section>
-    <h2>About</h2>
-    <div class="prose">
-      <p>I am a PhD student in Biostatistics at the University of Nebraska Medical Center, where I have worked as a graduate assistant since 2024. My research is in biostatistics and health informatics, with a focus on geographic access to care, phenotyping from electronic health records, and survival and longitudinal methods for real-world health data.</p>
-    </div>
-  </section>
+<header>
+  <h1>Xuxiang Wang</h1>
+  <p class="role">PhD student in Biostatistics, University of Nebraska Medical Center</p>
+  <p>I study who can reach health care and research, and how well electronic health records capture what patients report. My work uses EHR, registry and public administrative data, with reproducible R and Python pipelines. I came to biostatistics from computer science.</p>
+  <div class="contact">
+    <span>xuxwang@unmc.edu</span>
+    <a href="https://orcid.org/0009-0006-2953-0576">ORCID</a>
+    <a href="https://github.com/xuxiang-wang">GitHub</a>
+  </div>
+</header>
 
-  <section>
-    <h2>Publications</h2>
-    <ul>
-      <li class="item">
-        <h3>Rural–urban differences in clinical trial availability across U.S. counties, 2000–2025</h3>
-        <p class="detail">Second author. <i>JAMA Network Open</i>, accepted.</p>
-      </li>
-      <li class="item">
-        <h3>Tobacco use phenotyping from electronic health records</h3>
-        <p class="detail">First author. <i>Learning Health Systems</i>, under review. <a href="https://github.com/xuxiang-wang/AoU-OMOP-Tobacco-Phenotyping">Code</a></p>
-      </li>
-    </ul>
-  </section>
+<section id="research" class="entries" aria-labelledby="research-title">
+  <h2 id="research-title">Research</h2>
 
-  <section>
-    <h2>Projects</h2>
-    <ul>
-      <li class="item">
-        <h3>Rurality and access to solid-organ transplantation</h3>
-        <p class="detail">Ongoing. Study design and analysis plan using Epic Cosmos data.</p>
-      </li>
-      <li class="item">
-        <h3>FNBO Datathon 2026</h3>
-        <p class="detail">Team project, first place. Responsible for modeling and longitudinal feature design.</p>
-      </li>
-      <li class="item">
-        <h3>Reproducible mathematical modeling</h3>
-        <p class="detail">Ongoing. Rebuilding past contest work on public data as reproducible R projects.</p>
-      </li>
-    </ul>
-  </section>
+  <article>
+    <div class="meta"><span>JAMA Network Open · accepted</span><span>Second author</span><span>Public data · code</span></div>
+    <h3>Rural-urban disparities in clinical trial availability in the US, 2000–2025</h3>
+    <p>Across 3,144 counties, rural counties had about one-third the per-capita availability of completed trials of urban counties (adjusted rate ratio <span class="num">0.31</span>, 95% CI 0.26–0.38). The gap narrowed from 2000 to 2025 but never closed.</p>
+    <a class="more" href="https://github.com/Anzalone-Lab/rural-urban-clinical-trials-study">Code and data</a>
+  </article>
 
-  <section>
-    <h2>Honors</h2>
-    <ul class="plain">
-      <li><span>FNBO Datathon, First Place (team)</span><span class="year">2026</span></li>
-      <li><span>Sparks Award</span><span class="year"></span></li>
-      <li><span>Mathematical Modeling Contest Awards</span><span class="year"></span></li>
-    </ul>
-  </section>
+  <article>
+    <div class="meta"><span>Learning Health Systems · under review</span><span>First author</span><span>Restricted data · public code</span></div>
+    <h3>A reusable tobacco phenotype for the OMOP Common Data Model</h3>
+    <p>A point-in-time smoking-status algorithm built from standard concept sets, validated against survey self-report in 120,624 All of Us participants: moderate agreement for current smoking (kappa <span class="num">0.45</span>), good agreement for smoking duration (ICC <span class="num">0.78</span>).</p>
+    <a class="more" href="https://github.com/xuxiang-wang/AoU-OMOP-Tobacco-Phenotyping">Concept sets and code</a>
+  </article>
 
-  <footer>Last updated November 2026</footer>
+  <article>
+    <div class="meta"><span>In progress</span><span>Restricted data</span></div>
+    <h3>Rurality and access to solid-organ transplantation</h3>
+    <p>Do rural patients drop out at each step from referral to transplant, and does it affect survival? A competing-risk study design in Epic Cosmos covering kidney, liver and pancreas referrals, 2014–2025.</p>
+  </article>
+</section>
+
+<section id="projects" aria-labelledby="projects-title">
+  <h2 id="projects-title">Projects</h2>
+  <div class="cards">
+    <a class="card" href="projects/gold-bitcoin/">
+      <span class="meta">MCM 2022 · Honorable Mention · public data</span>
+      <span class="title">Trading gold and bitcoin without hindsight</span>
+      <span class="summary">A cost-aware daily strategy turned $1,000 into <span class="num">$21,064</span> with half the drawdown of holding bitcoin. Choose your own risk level and rerun the backtest.</span>
+      <span class="go">Interactive backtest</span>
+    </a>
+    <a class="card" href="projects/raw-materials/">
+      <span class="meta">CUMCM 2021 · Second Prize · public data</span>
+      <span class="title">Ordering raw materials when supply is uncertain</span>
+      <span class="summary">From 402 suppliers, 23 can keep a plant running with two weeks of stock, and output can rise <span class="num">22%</span>. Choose how cautious to be and see what the plan needs.</span>
+      <span class="go">Interactive plan</span>
+    </a>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <span>Omaha, Nebraska</span>
+  <span>Last updated November 2026</span>
+</footer>
+
 </div>
 </body>
 </html>

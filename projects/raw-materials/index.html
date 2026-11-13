@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Raw Material Planner · Xuxiang Wang</title>
+<meta name="description" content="2021 CUMCM Problem C: choose how cautiously to read supplier capacity and how much safety stock to plan, and see how many suppliers a plant needs and how often its stock holds up.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Shared site tokens: identical on every page of the site. Series colors are this page's own. */
+:root {
+  --bg: #f7f8fa; --surface: #ffffff; --ink: #12161c; --ink-2: #3d4450; --ink-3: #5b6472;
+  --rule: #dde1e7; --rule-strong: #c4cad3; --link: #1f62b8; --link-hover: #174c8f;
+  --accent: #1f62b8; --series: #2a78d6; --band: #c7dcf6; --buffer: #5b6472;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111418; --surface: #181c22; --ink: #eef0f3; --ink-2: #c3c9d2; --ink-3: #9aa2ae;
+    --rule: #2a3039; --rule-strong: #3a424d; --link: #7cb0f2; --link-hover: #a6c9f6;
+    --accent: #3987e5; --series: #3987e5; --band: #1f3554; --buffer: #9aa2ae; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111418; --surface: #181c22; --ink: #eef0f3; --ink-2: #c3c9d2; --ink-3: #9aa2ae;
+  --rule: #2a3039; --rule-strong: #3a424d; --link: #7cb0f2; --link-hover: #a6c9f6;
+  --accent: #3987e5; --series: #3987e5; --band: #1f3554; --buffer: #9aa2ae; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+a { color: var(--link); text-decoration: none; }
+a:hover { color: var(--link-hover); text-decoration: underline; }
+.page { max-width: 1040px; margin: 0 auto; padding-block: 32px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 32px; }
+.site-nav { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 12px 24px;
+  border-bottom: 1px solid var(--rule); padding-bottom: 16px; }
+.site-nav .name { font-weight: 600; font-size: 18px; color: var(--ink); }
+.site-nav .links { display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 15px; }
+.eyebrow { font-family: var(--font-data); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+h1 { font-weight: 500; font-size: clamp(28px, 4.5vw, 38px); line-height: 1.15; margin: 8px 0 12px; text-wrap: balance; letter-spacing: -0.02em; }
+h2 { font-weight: 600; font-size: 22px; margin: 0; text-wrap: balance; }
+.lede { max-width: 66ch; color: var(--ink-2); margin: 0; }
+.lede strong { color: var(--ink); font-weight: 600; }
+
+.controls { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 20px; display: grid; gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); }
+.control { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.control-label { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; font-size: 13px; }
+.control-label output { font-family: var(--font-data); font-weight: 500; color: var(--accent); }
+.hint { font-size: 12.5px; color: var(--ink-3); line-height: 1.45; }
+.segments { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+.segments button { font: inherit; font-size: 12.5px; padding: 8px 6px; border-radius: 6px; border: 1px solid var(--rule-strong);
+  background: transparent; color: var(--ink-2); cursor: pointer; line-height: 1.25; }
+.segments button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.segments button:hover:not([aria-pressed="true"]) { border-color: var(--accent); color: var(--ink); }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.ledger { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); border-top: 2px solid var(--ink); margin: 0; }
+.ledger div { padding: 14px 14px 14px 0; border-bottom: 1px solid var(--rule); display: grid; gap: 2px; min-width: 0; }
+.ledger dt { font-size: 12px; color: var(--ink-3); }
+.ledger dd { margin: 0; font-family: var(--font-data); font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.ledger .compare { font-family: var(--font-data); font-size: 12px; color: var(--ink-3); }
+.notice { border: 1px solid var(--rule-strong); border-radius: 8px; padding: 14px 16px; color: var(--ink-2); background: var(--surface); }
+
+.chart-block { display: grid; gap: 10px; min-width: 0; }
+.chart-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 20px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12.5px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.legend i.box { height: 10px; width: 14px; }
+.chart { position: relative; width: 100%; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text { fill: var(--ink-3); font-family: var(--font-data); font-size: 11px; }
+.tooltip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--rule-strong); border-radius: 6px;
+  padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.12); min-width: 170px; z-index: 2; }
+.tooltip .t-head { font-family: var(--font-data); color: var(--ink-3); margin-bottom: 4px; }
+.tooltip .t-row { display: flex; justify-content: space-between; gap: 12px; font-variant-numeric: tabular-nums; }
+.tooltip .t-row b { font-family: var(--font-data); font-weight: 500; }
+
+.suppliers { display: flex; flex-wrap: wrap; gap: 6px; }
+.suppliers span { font-family: var(--font-data); font-size: 12.5px; padding: 4px 8px; border: 1px solid var(--rule); border-radius: 6px;
+  background: var(--surface); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.findings { display: grid; gap: 14px; max-width: 72ch; }
+.findings p { margin: 0; color: var(--ink-2); }
+.findings p strong { color: var(--ink); font-weight: 600; }
+footer { font-size: 12.5px; color: var(--ink-3); border-top: 1px solid var(--rule); padding-top: 16px; display: grid; gap: 6px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <nav class="site-nav" aria-label="Site">
+    <a class="name" href="../../">Xuxiang Wang</a>
+    <div class="links">
+      <a href="../../#research">Research</a>
+      <a href="../../#projects">Projects</a>
+      <a href="https://github.com/xuxiang-wang/raw-material-ordering">Code</a>
+    </div>
+  </nav>
+
+  <header>
+    <div class="eyebrow">2021 CUMCM Problem C · Second Prize · reproducible analysis</div>
+    <h1>How many suppliers keep a plant running when supply is uncertain?</h1>
+    <p class="lede">A plant makes <strong>28,200 m³ of board a week</strong> from three raw materials and must always hold <strong>two weeks of stock</strong>. It can order from 402 suppliers and ship through 8 transporters, each carrying up to 6,000 m³ a week. History shows how much each supplier delivered, but not how much it could have delivered, so the plan depends on how cautiously that history is read. Choose below, and the page shows the 24-week plan with the fewest suppliers and how its stock held up in 2,000 simulations.</p>
+  </header>
+
+  <section class="controls" aria-label="Planning choices">
+    <div class="control">
+      <div class="control-label"><span id="capacity-label">Supplier capacity</span><output id="capacity-out"></output></div>
+      <div class="segments" role="group" aria-labelledby="capacity-label" id="capacity"></div>
+      <div class="hint">What each supplier is assumed able to deliver in a given week of the 24-week cycle, out of its 10 past deliveries in that week. The default, the 2nd largest, is an amount it has delivered at least twice.</div>
+    </div>
+    <div class="control">
+      <div class="control-label"><label for="safety">Extra safety stock</label><output id="safety-out" for="safety"></output></div>
+      <input type="range" id="safety" min="0" max="1" step="0.25" value="0">
+      <div class="hint">Planned stock on top of the two-week rule. The plan is built to meet the rule on expected deliveries, so without extra stock it sits right at the limit in the last weeks.</div>
+    </div>
+  </section>
+
+  <section class="chart-block" aria-labelledby="plan-title">
+    <div class="chart-head"><h2 id="plan-title">The plan with the fewest suppliers</h2></div>
+    <div id="results"></div>
+  </section>
+
+  <section class="chart-block" aria-labelledby="stock-title" id="stock-block">
+    <div class="chart-head">
+      <h2 id="stock-title">Simulated stock over the 24 weeks</h2>
+      <div class="legend"><span><i style="background:var(--series)"></i>Median of 2,000 runs</span><span><i class="box" style="background:var(--band)"></i>5th to 95th percentile</span><span><i style="background:var(--buffer)"></i>Two-week rule</span></div>
+    </div>
+    <div class="chart" id="stock-chart"></div>
+    <div class="hint">Each run draws every supplier's delivered-to-ordered ratio and every transporter's loss rate from their own histories. Capacity itself is not varied; that is what the capacity choice above is for.</div>
+  </section>
+
+  <section class="chart-block" aria-labelledby="suppliers-title" id="suppliers-block">
+    <div class="chart-head"><h2 id="suppliers-title">Suppliers in the plan</h2><div class="hint">Supplier · material · share of planned deliveries</div></div>
+    <div class="suppliers" id="supplier-list"></div>
+  </section>
+
+  <section class="chart-block" aria-labelledby="history-title">
+    <div class="chart-head">
+      <h2 id="history-title">What the 402 suppliers delivered, 240 weeks</h2>
+      <div class="legend"><span><i style="background:var(--series)"></i>Deliveries, in m³ of product</span><span><i style="background:var(--buffer)"></i>Weekly production, 28,200</span></div>
+    </div>
+    <div class="chart" id="history-chart"></div>
+  </section>
+
+  <section class="findings" aria-labelledby="findings-title">
+    <h2 id="findings-title">What the analysis found</h2>
+    <p><strong>Past supply rarely covered production.</strong> Deliveries made enough for 28,200 m³ in only 28% of the 240 weeks. Large deliveries repeat every 24 weeks, and orders far above a supplier's usual amount were simply not filled.</p>
+    <p><strong>The capacity assumption drives every answer.</strong> Reading each supplier's history more cautiously raises the number of suppliers needed from 14 to 23 to 36, and lowers the most the plant could produce from 40,889 to 34,396 to 30,245 m³ a week. If suppliers can only repeat their typical deliveries, 28,200 cannot be sustained at all.</p>
+    <p><strong>A little safety stock buys a lot of reliability.</strong> Under the default assumption, the 23-supplier plan never stops production in simulation, but keeps the full two-week buffer in only 78% of runs. Planning a quarter-week of extra stock raises that to 95% with the same suppliers.</p>
+    <p><strong>Why not the most optimistic reading?</strong> It looks safe in simulation, because the simulation does not vary capacity. But it counts one-off deliveries as capacity. One supplier delivered 30,977 m³ once and nothing at all in 7 of its 10 cycles.</p>
+  </section>
+
+  <footer>
+    <div>Method: suppliers ranked with entropy-weighted TOPSIS; the fewest suppliers found as a 0/1 covering problem among the top 60; cheapest orders and least-loss transport from linear programs; stock simulated 2,000 times per plan. All rules (capacity, 48,000 m³ weekly transport, two-week stock) are checked automatically in the <a href="https://github.com/xuxiang-wang/raw-material-ordering">project repository</a>.</div>
+    <div>Data: attachments to the 2021 China Undergraduate Mathematical Contest in Modeling, Problem C.</div>
+  </footer>
+</div>
+
+<script>
+const DATA = {"scenarios":[{"capacity":1,"safety_weeks":0,"largest_weekly_production":40889,"feasible":true,"suppliers":[{"supplier":"S229","material":"A","share":0.1059},{"supplier":"S140","material":"B","share":0.0909},{"supplier":"S361","material":"C","share":0.1099},{"supplier":"S108","material":"B","share":0.0358},{"supplier":"S340","material":"B","share":0.0223},{"supplier":"S275","material":"A","share":0.0444},{"supplier":"S329","material":"A","share":0.0447},{"supplier":"S151","material":"C","share":0.1482},{"supplier":"S139","material":"B","share":0.0455},{"supplier":"S330","material":"B","share":0.0286},{"supplier":"S308","material":"B","share":0.0229},{"supplier":"S143","material":"A","share":0.0435},{"supplier":"S395","material":"A","share":0.09},{"supplier":"S348","material":"A","share":0.1673}],"share_A":0.49587,"share_B":0.246057,"share_C":0.258074,"delivered_m3":440603.586061,"planned_loss_rate":0.007221,"kept_two_week_buffer":0.959,"never_ran_out":1,"stock_band":[[3.32165,3.234108,3.337594,2.903637,3.701956,3.334468,2.897345,2.49736,2.252977,2.224195,2.618467,3.440638,3.243744,3.116952,2.778665,2.3572,2.158486,2.293968,3.865937,4.08824,3.606459,3.090227,2.567964,2.007851],[3.344963,3.2631,3.370344,2.940586,3.742211,3.377944,2.943224,2.545082,2.303502,2.276834,2.676235,3.50649,3.311806,3.186493,2.849627,2.428256,2.232633,2.37424,3.962947,4.198587,3.722334,3.207206,2.68568,2.13064],[3.361308,3.282377,3.394783,2.967603,3.776576,3.414075,2.980481,2.583865,2.345877,2.334185,2.736152,3.575682,3.382182,3.259413,2.925036,2.504394,2.310237,2.492228,4.28088,4.535713,4.0627,3.542868,3.023124,2.468029]]},{"capacity":1,"safety_weeks":0.25,"largest_weekly_production":40889,"feasible":true,"suppliers":[{"supplier":"S229","material":"A","share":0.1046},{"supplier":"S140","material":"B","share":0.0898},{"supplier":"S361","material":"C","share":0.1085},{"supplier":"S108","material":"B","share":0.0429},{"supplier":"S340","material":"B","share":0.03},{"supplier":"S275","material":"A","share":0.0439},{"supplier":"S329","material":"A","share":0.0442},{"supplier":"S151","material":"C","share":0.1463},{"supplier":"S139","material":"B","share":0.0451},{"supplier":"S330","material":"B","share":0.0375},{"supplier":"S308","material":"B","share":0.0299},{"supplier":"S395","material":"A","share":0.0889},{"supplier":"S307","material":"A","share":0.0232},{"supplier":"S348","material":"A","share":0.1652}],"share_A":0.46993,"share_B":0.275235,"share_C":0.254836,"delivered_m3":446201.930684,"planned_loss_rate":0.007367,"kept_two_week_buffer":0.998,"never_ran_out":1,"stock_band":[[3.285117,3.159032,3.224747,2.782641,3.553384,3.69295,3.217533,2.778047,2.483872,2.424214,3.008911,3.954274,3.932916,3.896254,3.520528,3.054045,2.815017,2.902016,4.43966,4.618141,3.995267,3.429569,2.87714,2.265706],[3.306198,3.184948,3.253386,2.812594,3.587881,3.728988,3.254927,2.816874,2.525454,2.467649,3.060913,4.01662,3.996497,3.959411,3.58475,3.119609,2.881454,2.975445,4.533093,4.722107,4.098352,3.534353,2.980633,2.37088],[3.321059,3.202989,3.276148,2.836584,3.619381,3.767655,3.293345,2.856577,2.568342,2.528648,3.125114,4.080585,4.063083,4.028522,3.660177,3.195908,2.959539,3.100447,4.837879,5.04679,4.424854,3.861634,3.306247,2.697358]]},{"capacity":1,"safety_weeks":0.5,"largest_weekly_production":40889,"feasible":true,"suppliers":[{"supplier":"S229","material":"A","share":0.1037},{"supplier":"S140","material":"B","share":0.089},{"supplier":"S361","material":"C","share":0.1076},{"supplier":"S108","material":"B","share":0.0369},{"supplier":"S340","material":"B","share":0.0229},{"supplier":"S275","material":"A","share":0.0435},{"supplier":"S329","material":"A","share":0.0438},{"supplier":"S151","material":"C","share":0.1451},{"supplier":"S139","material":"B","share":0.0446},{"supplier":"S330","material":"B","share":0.028},{"supplier":"S308","material":"B","share":0.0228},{"supplier":"S131","material":"B","share":0.0179},{"supplier":"S143","material":"A","share":0.0426},{"supplier":"S395","material":"A","share":0.0881},{"supplier":"S348","material":"A","share":0.1638}],"share_A":0.485472,"share_B":0.261866,"share_C":0.252662,"delivered_m3":450040.587925,"planned_loss_rate":0.007313,"kept_two_week_buffer":0.999,"never_ran_out":1,"stock_band":[[3.35835,3.304207,3.448688,3.065353,3.916194,3.598393,3.201917,2.840512,2.637717,2.652971,3.112953,3.937838,3.741254,3.613959,3.278369,2.854725,2.658799,2.792802,4.36455,4.587556,4.103197,3.587401,3.064354,2.506691],[3.381934,3.337387,3.487295,3.1039,3.958988,3.642372,3.247687,2.888353,2.688998,2.710955,3.176476,4.007737,3.81246,3.686098,3.349098,2.927129,2.732022,2.873686,4.464898,4.696972,4.220214,3.704585,3.183979,2.627471],[3.398016,3.356525,3.511126,3.130435,3.993155,3.679224,3.284695,2.927344,2.730404,2.76432,3.23274,4.069666,3.876162,3.753233,3.419495,2.999299,2.80752,2.991197,4.766084,5.012153,4.536312,4.014562,3.49386,2.938638]]},{"capacity":1,"safety_weeks":0.75,"largest_weekly_production":40889,"feasible":true,"suppliers":[{"supplier":"S229","material":"A","share":0.1029},{"supplier":"S140","material":"B","share":0.0883},{"supplier":"S361","material":"C","share":0.1067},{"supplier":"S108","material":"B","share":0.0366},{"supplier":"S340","material":"B","share":0.0236},{"supplier":"S275","material":"A","share":0.0431},{"supplier":"S329","material":"A","share":0.0434},{"supplier":"S151","material":"C","share":0.1439},{"supplier":"S139","material":"B","share":0.0443},{"supplier":"S330","material":"B","share":0.0297},{"supplier":"S308","material":"B","share":0.0226},{"supplier":"S143","material":"A","share":0.0422},{"supplier":"S395","material":"A","share":0.0874},{"supplier":"S307","material":"A","share":0.0228},{"supplier":"S348","material":"A","share":0.1624}],"share_A":0.504373,"share_B":0.245015,"share_C":0.250612,"delivered_m3":453722.727579,"planned_loss_rate":0.007322,"kept_two_week_buffer":1,"never_ran_out":1,"stock_band":[[3.32231,3.232146,3.334224,2.931893,3.745053,3.927735,3.492717,3.092382,2.849733,2.828867,3.35893,4.182168,3.98449,3.855471,3.518931,3.094854,2.899062,3.033907,4.607485,4.828487,4.348702,3.831263,3.311385,2.756883],[3.344983,3.263004,3.370183,2.969074,3.789244,3.975261,3.542599,3.144897,2.904461,2.886236,3.423747,4.256009,4.060796,3.934659,3.598273,3.177086,2.982447,3.12382,4.714408,4.948345,4.472899,3.957571,3.436805,2.880539],[3.360376,3.281836,3.395072,2.995407,3.823185,4.015632,3.585775,3.191146,2.954098,2.94525,3.487042,4.325805,4.130303,4.009929,3.675904,3.255677,3.068421,3.2516,5.040481,5.296673,4.823185,4.304234,3.779619,3.230884]]},{"capacity":1,"safety_weeks":1,"largest_weekly_production":40889,"feasible":true,"suppliers":[{"supplier":"S229","material":"A","share":0.1018},{"supplier":"S140","material":"B","share":0.0873},{"supplier":"S361","material":"C","share":0.1056},{"supplier":"S108","material":"B","share":0.0345},{"supplier":"S340","material":"B","share":0.0215},{"supplier":"S275","material":"A","share":0.0427},{"supplier":"S329","material":"A","share":0.043},{"supplier":"S151","material":"C","share":0.1424},{"supplier":"S139","material":"B","share":0.0438},{"supplier":"S330","material":"B","share":0.0275},{"supplier":"S308","material":"B","share":0.0223},{"supplier":"S131","material":"B","share":0.016},{"supplier":"S143","material":"A","share":0.0418},{"supplier":"S395","material":"A","share":0.0865},{"supplier":"S307","material":"A","share":0.0226},{"supplier":"S348","material":"A","share":0.1608}],"share_A":0.499182,"share_B":0.252786,"share_C":0.248032,"delivered_m3":458441.228512,"planned_loss_rate":0.00734,"kept_two_week_buffer":1,"never_ran_out":1,"stock_band":[[3.357809,3.308756,3.453638,3.095735,3.963912,4.19468,3.801631,3.441395,3.241078,3.220431,3.616287,4.436359,4.241292,4.11164,3.773417,3.348335,3.153456,3.290125,4.861037,5.085906,4.604337,4.088124,3.56514,3.007907],[3.381269,3.33673,3.487029,3.132195,4.005532,4.239324,3.847283,3.489653,3.291076,3.276523,3.675264,4.507126,4.31196,4.186004,3.849559,3.427672,3.23346,3.3725,4.965235,5.197086,4.721313,4.206326,3.685599,3.128566],[3.397475,3.356743,3.511927,3.159466,4.040046,4.278493,3.887699,3.531558,3.33781,3.329716,3.73484,4.571481,4.37675,4.255249,3.920893,3.503349,3.312504,3.49592,5.270949,5.514128,5.040145,4.524384,4.003346,3.451771]]},{"capacity":2,"safety_weeks":0,"largest_weekly_production":34396,"feasible":true,"suppliers":[{"supplier":"S229","material":"A","share":0.097},{"supplier":"S140","material":"B","share":0.0862},{"supplier":"S361","material":"C","share":0.0912},{"supplier":"S108","material":"B","share":0.0562},{"supplier":"S282","material":"A","share":0.0449},{"supplier":"S340","material":"B","share":0.0427},{"supplier":"S275","material":"A","share":0.0411},{"supplier":"S329","material":"A","share":0.0404},{"supplier":"S151","material":"C","share":0.0398},{"supplier":"S139","material":"B","share":0.0417},{"supplier":"S330","material":"B","share":0.0389},{"supplier":"S308","material":"B","share":0.0373},{"supplier":"S131","material":"B","share":0.0342},{"supplier":"S356","material":"C","share":0.0431},{"supplier":"S201","material":"A","share":0.0317},{"supplier":"S268","material":"C","share":0.0318},{"supplier":"S306","material":"C","share":0.0321},{"supplier":"S143","material":"A","share":0.0316},{"supplier":"S352","material":"A","share":0.0289},{"supplier":"S395","material":"A","share":0.0327},{"supplier":"S194","material":"C","share":0.0251},{"supplier":"S307","material":"A","share":0.0224},{"supplier":"S037","material":"C","share":0.0289}],"share_A":0.370832,"share_B":0.337158,"share_C":0.29201,"delivered_m3":447273.812379,"planned_loss_rate":0.006351,"kept_two_week_buffer":0.775,"never_ran_out":1,"stock_band":[[3.372469,3.366626,3.517551,3.195695,4.010219,4.280413,3.972201,3.681405,3.49361,3.380924,3.234361,3.126513,3.032836,2.967238,2.865202,2.828229,2.949336,2.982333,2.842522,2.718565,2.514078,2.194379,1.886301,1.755456],[3.396276,3.396809,3.550298,3.233885,4.051496,4.324198,4.018899,3.731692,3.543155,3.432507,3.289661,3.184562,3.113434,3.062469,2.962046,2.933951,3.062941,3.106622,2.973612,2.888348,2.71161,2.392894,2.386885,2.257471],[3.412664,3.417031,3.576206,3.26206,4.085709,4.363626,4.059047,3.775808,3.587577,3.479933,3.339868,3.23664,3.174753,3.138693,3.041716,3.028185,3.16531,3.220575,3.097612,3.02591,2.867963,2.556384,2.588592,2.458375]]},{"capacity":2,"safety_weeks":0.25,"largest_weekly_production":34396,"feasible":true,"suppliers":[{"supplier":"S229","material":"A","share":0.096},{"supplier":"S140","material":"B","share":0.0853},{"supplier":"S361","material":"C","share":0.0903},{"supplier":"S108","material":"B","share":0.0573},{"supplier":"S282","material":"A","share":0.0444},{"supplier":"S340","material":"B","share":0.0439},{"supplier":"S275","material":"A","share":0.0407},{"supplier":"S329","material":"A","share":0.04},{"supplier":"S151","material":"C","share":0.0394},{"supplier":"S139","material":"B","share":0.0413},{"supplier":"S330","material":"B","share":0.0416},{"supplier":"S308","material":"B","share":0.0396},{"supplier":"S131","material":"B","share":0.0351},{"supplier":"S356","material":"C","share":0.0426},{"supplier":"S201","material":"A","share":0.0314},{"supplier":"S268","material":"C","share":0.0315},{"supplier":"S306","material":"C","share":0.0318},{"supplier":"S143","material":"A","share":0.0313},{"supplier":"S352","material":"A","share":0.0286},{"supplier":"S395","material":"A","share":0.0324},{"supplier":"S194","material":"C","share":0.0249},{"supplier":"S307","material":"A","share":0.0221},{"supplier":"S037","material":"C","share":0.0286}],"share_A":0.36696,"share_B":0.344078,"share_C":0.288962,"delivered_m3":451992.313311,"planned_loss_rate":0.006381,"kept_two_week_buffer":0.9535,"never_ran_out":1,"stock_band":[[3.372469,3.366626,3.517551,3.195695,4.010219,4.280413,3.972201,3.681405,3.49361,3.380924,3.234361,3.126513,3.032836,2.967238,2.865202,2.828229,2.949336,2.982333,2.842522,2.718565,2.612501,2.444206,2.138592,2.006879],[3.396276,3.396809,3.550298,3.233885,4.051496,4.324198,4.018899,3.731692,3.543155,3.432507,3.289661,3.184562,3.113434,3.062469,2.962046,2.933951,3.062941,3.106622,2.973612,2.888348,2.810185,2.644431,2.638394,2.509019],[3.412664,3.417031,3.576206,3.26206,4.085709,4.363626,4.059047,3.775808,3.587577,3.479933,3.339868,3.23664,3.174753,3.138693,3.041716,3.028185,3.16531,3.220575,3.097612,3.02591,2.967087,2.807984,2.840433,2.710714]]},{"capacity":2,"safety_weeks":0.5,"largest_weekly_production":34396,"feasible":true,"suppliers":[{"supplier":"S229","material":"A","share":0.095},{"supplier":"S140","material":"B","share":0.0844},{"supplier":"S361","material":"C","share":0.0893},{"supplier":"S108","material":"B","share":0.0567},{"supplier":"S282","material":"A","share":0.044},{"supplier":"S340","material":"B","share":0.0435},{"supplier":"S275","material":"A","share":0.0403},{"supplier":"S329","material":"A","share":0.0396},{"supplier":"S151","material":"C","share":0.039},{"supplier":"S139","material":"B","share":0.0408},{"supplier":"S330","material":"B","share":0.0412},{"supplier":"S308","material":"B","share":0.0399},{"supplier":"S131","material":"B","share":0.0357},{"supplier":"S356","material":"C","share":0.0422},{"supplier":"S201","material":"A","share":0.0311},{"supplier":"S268","material":"C","share":0.0311},{"supplier":"S306","material":"C","share":0.0314},{"supplier":"S143","material":"A","share":0.031},{"supplier":"S352","material":"A","share":0.0283},{"supplier":"S395","material":"A","share":0.0321},{"supplier":"S194","material":"C","share":0.0246},{"supplier":"S307","material":"A","share":0.0219},{"supplier":"S037","material":"C","share":0.0283},{"supplier":"S338","material":"B","share":0.0088}],"share_A":0.363169,"share_B":0.350854,"share_C":0.285977,"delivered_m3":456710.814243,"planned_loss_rate":0.006499,"kept_two_week_buffer":1,"never_ran_out":1,"stock_band":[[3.475583,3.470216,3.620983,3.398181,4.209913,4.48113,4.175476,3.886355,3.694841,3.584317,3.439626,3.330202,3.238655,3.171315,3.069562,3.02819,3.148465,3.183292,3.043312,2.923598,2.807539,2.674297,2.389895,2.260958],[3.50238,3.503094,3.656826,3.438198,4.254855,4.529304,4.224047,3.937322,3.749294,3.639173,3.496334,3.39079,3.318204,3.26645,3.167292,3.137498,3.268501,3.311142,3.178312,3.093202,3.012114,2.884783,2.880115,2.75242],[3.521919,3.525859,3.684754,3.468848,4.293159,4.571144,4.265934,3.981941,3.795208,3.68882,3.550264,3.446957,3.385191,3.347139,3.250012,3.230047,3.368534,3.421947,3.298328,3.228443,3.171973,3.051605,3.080009,2.95122]]},{"capacity":2,"safety_weeks":0.75,"largest_weekly_production":34396,"feasible":true,"suppliers":[{"supplier":"S229","material":"A","share":0.0941},{"supplier":"S140","material":"B","share":0.0836},{"supplier":"S361","material":"C","share":0.0885},{"supplier":"S108","material":"B","share":0.0578},{"supplier":"S282","material":"A","share":0.0436},{"supplier":"S340","material":"B","share":0.0448},{"supplier":"S275","material":"A","share":0.0399},{"supplier":"S329","material":"A","share":0.0392},{"supplier":"S151","material":"C","share":0.0386},{"supplier":"S139","material":"B","share":0.0405},{"supplier":"S330","material":"B","share":0.0421},{"supplier":"S308","material":"B","share":0.0395},{"supplier":"S131","material":"B","share":0.0358},{"supplier":"S356","material":"C","share":0.0418},{"supplier":"S201","material":"A","share":0.0308},{"supplier":"S268","material":"C","share":0.0309},{"supplier":"S306","material":"C","share":0.0311},{"supplier":"S143","material":"A","share":0.0307},{"supplier":"S352","material":"A","share":0.0281},{"supplier":"S395","material":"A","share":0.0318},{"supplier":"S194","material":"C","share":0.0244},{"supplier":"S307","material":"A","share":0.0217},{"supplier":"S348","material":"A","share":0.0125},{"supplier":"S037","material":"C","share":0.028}],"share_A":0.372432,"share_B":0.344161,"share_C":0.283407,"delivered_m3":460852.042315,"planned_loss_rate":0.00644,"kept_two_week_buffer":1,"never_ran_out":1,"stock_band":[[3.373306,3.369077,3.517376,3.198919,4.011549,4.280048,3.972148,3.695089,3.537687,3.518427,3.404927,3.322059,3.23306,3.187299,3.11247,3.096805,3.232382,3.28136,3.147379,3.040385,2.943101,2.826224,2.644491,2.516076],[3.396758,3.398051,3.552494,3.236132,4.053151,4.325876,4.020689,3.745553,3.588957,3.571989,3.461793,3.379291,3.314774,3.282336,3.209467,3.206115,3.35296,3.412663,3.284665,3.209731,3.133561,3.025136,3.1397,3.01301],[3.413687,3.417987,3.577255,3.26319,4.086691,4.366152,4.062067,3.788372,3.633949,3.622,3.515328,3.434273,3.379604,3.358429,3.287573,3.295279,3.454548,3.527581,3.407591,3.344752,3.287961,3.181153,3.327418,3.200028]]},{"capacity":2,"safety_weeks":1,"largest_weekly_production":34396,"feasible":true,"suppliers":[{"supplier":"S229","material":"A","share":0.0932},{"supplier":"S140","material":"B","share":0.0828},{"supplier":"S361","material":"C","share":0.0876},{"supplier":"S108","material":"B","share":0.0573},{"supplier":"S282","material":"A","share":0.0431},{"supplier":"S340","material":"B","share":0.0443},{"supplier":"S275","material":"A","share":0.0395},{"supplier":"S329","material":"A","share":0.0388},{"supplier":"S151","material":"C","share":0.0382},{"supplier":"S139","material":"B","share":0.0401},{"supplier":"S330","material":"B","share":0.042},{"supplier":"S308","material":"B","share":0.0402},{"supplier":"S131","material":"B","share":0.0354},{"supplier":"S356","material":"C","share":0.0414},{"supplier":"S201","material":"A","share":0.0305},{"supplier":"S268","material":"C","share":0.0305},{"supplier":"S306","material":"C","share":0.0308},{"supplier":"S143","material":"A","share":0.0304},{"supplier":"S352","material":"A","share":0.0278},{"supplier":"S395","material":"A","share":0.0314},{"supplier":"S194","material":"C","share":0.0242},{"supplier":"S307","material":"A","share":0.0215},{"supplier":"S348","material":"A","share":0.0124},{"supplier":"S037","material":"C","share":0.0278},{"supplier":"S338","material":"B","share":0.0086}],"share_A":0.368657,"share_B":0.350808,"share_C":0.280534,"delivered_m3":465570.543247,"planned_loss_rate":0.006556,"kept_two_week_buffer":1,"never_ran_out":1,"stock_band":[[3.478419,3.473743,3.623617,3.401102,4.214738,4.483728,4.17859,3.90217,3.746349,3.729186,3.615384,3.531023,3.44265,3.394391,3.31983,3.308019,3.440163,3.488585,3.352861,3.244043,3.147258,3.030499,2.888308,2.761213],[3.503534,3.504557,3.658878,3.440266,4.256409,4.53088,4.226352,3.951967,3.796033,3.779713,3.668783,3.587011,3.521566,3.489464,3.416106,3.414134,3.561039,3.623046,3.494231,3.416731,3.346527,3.236487,3.379937,3.254086],[3.525348,3.529432,3.689716,3.476211,4.302023,4.580279,4.276923,4.004544,3.848534,3.838481,3.730845,3.651752,3.59445,3.574554,3.506145,3.510726,3.668831,3.742056,3.62276,3.560869,3.508022,3.398268,3.572771,3.448192]]},{"capacity":3,"safety_weeks":0,"largest_weekly_production":30245,"feasible":true,"suppliers":[{"supplier":"S229","material":"A","share":0.0904},{"supplier":"S140","material":"B","share":0.0812},{"supplier":"S361","material":"C","share":0.0837},{"supplier":"S108","material":"B","share":0.0576},{"supplier":"S282","material":"A","share":0.0416},{"supplier":"S340","material":"B","share":0.0437},{"supplier":"S275","material":"A","share":0.0391},{"supplier":"S329","material":"A","share":0.0384},{"supplier":"S151","material":"C","share":0.0378},{"supplier":"S139","material":"B","share":0.0398},{"supplier":"S330","material":"B","share":0.0326},{"supplier":"S308","material":"B","share":0.0353},{"supplier":"S131","material":"B","share":0.0363},{"supplier":"S356","material":"C","share":0.0383},{"supplier":"S268","material":"C","share":0.0305},{"supplier":"S306","material":"C","share":0.0306},{"supplier":"S143","material":"A","share":0.028},{"supplier":"S352","material":"A","share":0.0257},{"supplier":"S395","material":"A","share":0.0188},{"supplier":"S194","material":"C","share":0.024},{"supplier":"S307","material":"A","share":0.0219},{"supplier":"S348","material":"A","share":0.0093},{"supplier":"S037","material":"C","share":0.0142},{"supplier":"S247","material":"C","share":0.0137},{"supplier":"S284","material":"C","share":0.0122},{"supplier":"S126","material":"C","share":0.0075},{"supplier":"S031","material":"B","share":0.0098},{"supplier":"S365","material":"C","share":0.0102},{"supplier":"S040","material":"B","share":0.0076},{"supplier":"S338","material":"B","share":0.008},{"supplier":"S364","material":"B","share":0.0071},{"supplier":"S367","material":"B","share":0.0063},{"supplier":"S055","material":"B","share":0.0057},{"supplier":"S346","material":"B","share":0.0056},{"supplier":"S086","material":"C","share":0.0048},{"supplier":"S114","material":"A","share":0.0029}],"share_A":0.316007,"share_B":0.376445,"share_C":0.307548,"delivered_m3":450287.096671,"planned_loss_rate":0.006426,"kept_two_week_buffer":1,"never_ran_out":1,"stock_band":[[3.450628,3.521944,3.71875,3.605964,4.35424,4.665276,4.358049,4.104882,3.976713,3.895364,3.693318,3.54805,3.458601,3.326998,3.268017,3.218796,3.307757,3.199666,3.08258,2.882815,2.716931,2.550292,2.35603,2.111646],[3.476158,3.55313,3.755491,3.644058,4.397584,4.71019,4.403654,4.154035,4.027954,3.947731,3.74761,3.603694,3.515219,3.386267,3.326343,3.27915,3.371063,3.26526,3.148623,2.951411,2.786212,2.619524,2.427146,2.184185],[3.499086,3.579823,3.789634,3.682344,4.443369,4.760405,4.454298,4.205398,4.081925,4.004159,3.804427,3.662449,3.575204,3.448986,3.390128,3.346371,3.440895,3.338309,3.222266,3.026168,2.861388,2.694479,2.501172,2.258398]]},{"capacity":3,"safety_weeks":0.25,"largest_weekly_production":30245,"feasible":true,"suppliers":[{"supplier":"S229","material":"A","share":0.0895},{"supplier":"S140","material":"B","share":0.0804},{"supplier":"S361","material":"C","share":0.0829},{"supplier":"S108","material":"B","share":0.057},{"supplier":"S282","material":"A","share":0.0411},{"supplier":"S340","material":"B","share":0.0432},{"supplier":"S275","material":"A","share":0.0387},{"supplier":"S329","material":"A","share":0.038},{"supplier":"S151","material":"C","share":0.0374},{"supplier":"S139","material":"B","share":0.0394},{"supplier":"S330","material":"B","share":0.0322},{"supplier":"S308","material":"B","share":0.0349},{"supplier":"S131","material":"B","share":0.0363},{"supplier":"S356","material":"C","share":0.0379},{"supplier":"S268","material":"C","share":0.0302},{"supplier":"S306","material":"C","share":0.0302},{"supplier":"S143","material":"A","share":0.0277},{"supplier":"S352","material":"A","share":0.0254},{"supplier":"S395","material":"A","share":0.0186},{"supplier":"S194","material":"C","share":0.0238},{"supplier":"S307","material":"A","share":0.0217},{"supplier":"S348","material":"A","share":0.0092},{"supplier":"S037","material":"C","share":0.0141},{"supplier":"S247","material":"C","share":0.0136},{"supplier":"S284","material":"C","share":0.012},{"supplier":"S126","material":"C","share":0.0074},{"supplier":"S031","material":"B","share":0.0101},{"supplier":"S365","material":"C","share":0.0101},{"supplier":"S040","material":"B","share":0.0077},{"supplier":"S338","material":"B","share":0.0079},{"supplier":"S364","material":"B","share":0.0072},{"supplier":"S367","material":"B","share":0.0062},{"supplier":"S055","material":"B","share":0.0057},{"supplier":"S346","material":"B","share":0.0055},{"supplier":"S080","material":"C","share":0.005},{"supplier":"S086","material":"C","share":0.0047},{"supplier":"S114","material":"A","share":0.0029},{"supplier":"S292","material":"A","share":0.004}],"share_A":0.316771,"share_B":0.373865,"share_C":0.309364,"delivered_m3":455011.508254,"planned_loss_rate":0.006476,"kept_two_week_buffer":1,"never_ran_out":1,"stock_band":[[3.465437,3.543317,3.758138,3.644764,4.410902,4.735506,4.441249,4.199964,4.090826,4.017664,3.823324,3.679927,3.60052,3.472524,3.420556,3.37526,3.476767,3.370167,3.263102,3.068111,2.91253,2.750163,2.569494,2.3641],[3.490097,3.575098,3.792757,3.683056,4.454212,4.779106,4.486951,4.247228,4.140144,4.06819,3.876212,3.73551,3.656636,3.529994,3.480681,3.436984,3.539965,3.436376,3.329144,3.136662,2.981892,2.820908,2.639671,2.434468],[3.513821,3.601988,3.831885,3.72648,4.503382,4.832747,4.543528,4.305293,4.198495,4.1278,3.936104,3.793845,3.715519,3.590769,3.544824,3.506378,3.612259,3.509684,3.403287,3.212991,3.059982,2.899878,2.7177,2.514567]]},{"capacity":3,"safety_weeks":0.5,"largest_weekly_production":30245,"feasible":true,"suppliers":[{"supplier":"S229","material":"A","share":0.0886},{"supplier":"S140","material":"B","share":0.0796},{"supplier":"S361","material":"C","share":0.082},{"supplier":"S108","material":"B","share":0.0564},{"supplier":"S282","material":"A","share":0.0407},{"supplier":"S340","material":"B","share":0.0428},{"supplier":"S275","material":"A","share":0.0383},{"supplier":"S329","material":"A","share":0.0376},{"supplier":"S151","material":"C","share":0.037},{"supplier":"S139","material":"B","share":0.039},{"supplier":"S330","material":"B","share":0.0319},{"supplier":"S308","material":"B","share":0.0345},{"supplier":"S131","material":"B","share":0.036},{"supplier":"S356","material":"C","share":0.0376},{"supplier":"S268","material":"C","share":0.0299},{"supplier":"S306","material":"C","share":0.0299},{"supplier":"S143","material":"A","share":0.0274},{"supplier":"S352","material":"A","share":0.0252},{"supplier":"S395","material":"A","share":0.0184},{"supplier":"S194","material":"C","share":0.0235},{"supplier":"S307","material":"A","share":0.0214},{"supplier":"S348","material":"A","share":0.0091},{"supplier":"S037","material":"C","share":0.0139},{"supplier":"S247","material":"C","share":0.0134},{"supplier":"S284","material":"C","share":0.0119},{"supplier":"S126","material":"C","share":0.0073},{"supplier":"S031","material":"B","share":0.01},{"supplier":"S365","material":"C","share":0.01},{"supplier":"S040","material":"B","share":0.0077},{"supplier":"S338","material":"B","share":0.0078},{"supplier":"S364","material":"B","share":0.0072},{"supplier":"S367","material":"B","share":0.0063},{"supplier":"S055","material":"B","share":0.0058},{"supplier":"S346","material":"B","share":0.0057},{"supplier":"S080","material":"C","share":0.005},{"supplier":"S294","material":"C","share":0.0047},{"supplier":"S086","material":"C","share":0.0047},{"supplier":"S114","material":"A","share":0.0028},{"supplier":"S292","material":"A","share":0.004},{"supplier":"S273","material":"A","share":0.0049}],"share_A":0.318431,"share_B":0.37066,"share_C":0.310909,"delivered_m3":459685.314931,"planned_loss_rate":0.006512,"kept_two_week_buffer":0.9995,"never_ran_out":1,"stock_band":[[3.469245,3.552739,3.772094,3.663543,4.435528,4.763065,4.474109,4.239029,4.13935,4.07635,3.893153,3.76401,3.698383,3.579722,3.542167,3.511286,3.627338,3.535244,3.439339,3.257509,3.113096,2.962943,2.792986,2.611174],[3.495325,3.584545,3.80742,3.702804,4.478938,4.809532,4.523005,4.289615,4.192972,4.132118,3.952196,3.82344,3.757061,3.641296,3.605658,3.575699,3.691968,3.602093,3.508922,3.329816,3.186001,3.036102,2.867574,2.686909],[3.517438,3.61014,3.840274,3.742682,4.524272,4.860898,4.576411,4.344307,4.247686,4.189925,4.011911,3.883305,3.817514,3.703494,3.671947,3.642437,3.763054,3.672115,3.578813,3.40227,3.259393,3.111178,2.942445,2.76343]]},{"capacity":3,"safety_weeks":0.75,"largest_weekly_production":30245,"feasible":true,"suppliers":[{"supplier":"S229","material":"A","share":0.0877},{"supplier":"S140","material":"B","share":0.0788},{"supplier":"S361","material":"C","share":0.0812},{"supplier":"S108","material":"B","share":0.0559},{"supplier":"S282","material":"A","share":0.0403},{"supplier":"S340","material":"B","share":0.0424},{"supplier":"S275","material":"A","share":0.0379},{"supplier":"S329","material":"A","share":0.0372},{"supplier":"S151","material":"C","share":0.0367},{"supplier":"S139","material":"B","share":0.0386},{"supplier":"S330","material":"B","share":0.0316},{"supplier":"S308","material":"B","share":0.0342},{"supplier":"S131","material":"B","share":0.0354},{"supplier":"S356","material":"C","share":0.0372},{"supplier":"S268","material":"C","share":0.0296},{"supplier":"S306","material":"C","share":0.0296},{"supplier":"S143","material":"A","share":0.0271},{"supplier":"S352","material":"A","share":0.0249},{"supplier":"S395","material":"A","share":0.0183},{"supplier":"S194","material":"C","share":0.0233},{"supplier":"S307","material":"A","share":0.0212},{"supplier":"S348","material":"A","share":0.0091},{"supplier":"S037","material":"C","share":0.0138},{"supplier":"S247","material":"C","share":0.0133},{"supplier":"S284","material":"C","share":0.0118},{"supplier":"S126","material":"C","share":0.0073},{"supplier":"S031","material":"B","share":0.0095},{"supplier":"S365","material":"C","share":0.0099},{"supplier":"S040","material":"B","share":0.0074},{"supplier":"S338","material":"B","share":0.0077},{"supplier":"S364","material":"B","share":0.0069},{"supplier":"S367","material":"B","share":0.0061},{"supplier":"S055","material":"B","share":0.0055},{"supplier":"S346","material":"B","share":0.0054},{"supplier":"S080","material":"C","share":0.0049},{"supplier":"S294","material":"C","share":0.0046},{"supplier":"S086","material":"C","share":0.0047},{"supplier":"S218","material":"C","share":0.004},{"supplier":"S114","material":"A","share":0.0028},{"supplier":"S292","material":"A","share":0.004},{"supplier":"S273","material":"A","share":0.0048},{"supplier":"S189","material":"A","share":0.0036},{"supplier":"S005","material":"A","share":0.0038}],"share_A":0.322744,"share_B":0.365369,"share_C":0.311886,"delivered_m3":464214.503103,"planned_loss_rate":0.00656,"kept_two_week_buffer":1,"never_ran_out":1,"stock_band":[[3.482316,3.575795,3.806882,3.709422,4.499138,4.838524,4.564473,4.339564,4.254906,4.202512,4.034761,3.915512,3.863409,3.757037,3.732365,3.712427,3.841296,3.757278,3.676354,3.506011,3.373849,3.234273,3.077035,2.864905],[3.507582,3.606815,3.844455,3.74941,4.541724,4.884916,4.612059,4.389519,4.306771,4.257109,4.089559,3.971104,3.919711,3.815961,3.795215,3.775212,3.905485,3.823617,3.743546,3.573476,3.442687,3.302895,3.147912,2.935926],[3.53038,3.634725,3.87973,3.787232,4.584949,4.93244,4.660058,4.439358,4.359962,4.311334,4.144095,4.028679,3.978388,3.876375,3.855434,3.838672,3.97223,3.893056,3.814962,3.645883,3.516531,3.377613,3.223108,3.012155]]},{"capacity":3,"safety_weeks":1,"largest_weekly_production":30245,"feasible":true,"suppliers":[{"supplier":"S229","material":"A","share":0.0867},{"supplier":"S140","material":"B","share":0.0779},{"supplier":"S361","material":"C","share":0.0803},{"supplier":"S108","material":"B","share":0.0553},{"supplier":"S282","material":"A","share":0.0399},{"supplier":"S340","material":"B","share":0.0419},{"supplier":"S275","material":"A","share":0.0375},{"supplier":"S329","material":"A","share":0.0368},{"supplier":"S151","material":"C","share":0.0363},{"supplier":"S139","material":"B","share":0.0382},{"supplier":"S330","material":"B","share":0.0312},{"supplier":"S308","material":"B","share":0.0338},{"supplier":"S131","material":"B","share":0.0352},{"supplier":"S356","material":"C","share":0.0368},{"supplier":"S268","material":"C","share":0.0292},{"supplier":"S306","material":"C","share":0.0293},{"supplier":"S143","material":"A","share":0.0268},{"supplier":"S352","material":"A","share":0.0247},{"supplier":"S395","material":"A","share":0.0181},{"supplier":"S194","material":"C","share":0.0231},{"supplier":"S307","material":"A","share":0.021},{"supplier":"S348","material":"A","share":0.009},{"supplier":"S037","material":"C","share":0.0136},{"supplier":"S247","material":"C","share":0.0132},{"supplier":"S284","material":"C","share":0.0117},{"supplier":"S126","material":"C","share":0.0072},{"supplier":"S031","material":"B","share":0.0098},{"supplier":"S365","material":"C","share":0.0098},{"supplier":"S040","material":"B","share":0.0076},{"supplier":"S338","material":"B","share":0.0077},{"supplier":"S364","material":"B","share":0.007},{"supplier":"S367","material":"B","share":0.0061},{"supplier":"S055","material":"B","share":0.0055},{"supplier":"S346","material":"B","share":0.0056},{"supplier":"S080","material":"C","share":0.0049},{"supplier":"S210","material":"C","share":0.0047},{"supplier":"S294","material":"C","share":0.0046},{"supplier":"S086","material":"C","share":0.0046},{"supplier":"S218","material":"C","share":0.004},{"supplier":"S003","material":"C","share":0.0047},{"supplier":"S114","material":"A","share":0.0028},{"supplier":"S292","material":"A","share":0.0039},{"supplier":"S273","material":"A","share":0.0048},{"supplier":"S189","material":"A","share":0.0036},{"supplier":"S005","material":"A","share":0.0037}],"share_A":0.319246,"share_B":0.362824,"share_C":0.31793,"delivered_m3":469301.59453,"planned_loss_rate":0.006592,"kept_two_week_buffer":1,"never_ran_out":1,"stock_band":[[3.482777,3.575627,3.809792,3.709431,4.500092,4.838297,4.564661,4.340618,4.272198,4.237204,4.084799,3.973091,3.922466,3.830604,3.839912,3.834209,3.974704,3.899146,3.826905,3.679698,3.561013,3.432634,3.287565,3.114012],[3.507544,3.606325,3.843171,3.748536,4.542039,4.884806,4.61264,4.393303,4.325938,4.291016,4.136981,4.029011,3.981096,3.890228,3.901541,3.896686,4.040626,3.966386,3.894828,3.747271,3.630647,3.503677,3.359138,3.187199],[3.530923,3.633593,3.879819,3.790503,4.587704,4.937966,4.666211,4.449319,4.383461,4.347737,4.194303,4.087986,4.041772,3.95217,3.966943,3.96653,4.109075,4.036854,3.967687,3.819464,3.705685,3.57839,3.437295,3.266642]]},{"capacity":5,"safety_weeks":0,"largest_weekly_production":25686,"feasible":false},{"capacity":5,"safety_weeks":0.25,"largest_weekly_production":25686,"feasible":false},{"capacity":5,"safety_weeks":0.5,"largest_weekly_production":25686,"feasible":false},{"capacity":5,"safety_weeks":0.75,"largest_weekly_production":25686,"feasible":false},{"capacity":5,"safety_weeks":1,"largest_weekly_production":25686,"feasible":false}],"capacity":[{"capacity":"largest delivery","fewest_suppliers_from_top_60":14,"largest_weekly_production":40889,"average_weekly_capacity_all_suppliers":59546},{"capacity":"2nd largest delivery","fewest_suppliers_from_top_60":23,"largest_weekly_production":34396,"average_weekly_capacity_all_suppliers":35165},{"capacity":"3rd largest delivery","fewest_suppliers_from_top_60":36,"largest_weekly_production":30245,"average_weekly_capacity_all_suppliers":30424},{"capacity":"5th largest delivery","largest_weekly_production":25686,"average_weekly_capacity_all_suppliers":25477}],"history":[24788,27145,27553,19578,42314,23818,16280,19691,21216,27323,18250,21995,26953,24442,24633,28520,34894,27764,26713,25079,26641,26196,37416,21034,47030,29996,33059,23904,48748,28383,16449,19428,24359,25292,21126,22443,28551,23147,23434,22138,22340,20856,22089,18697,22178,22376,25483,23401,78944,26836,30434,22590,51394,28880,16613,18193,22833,23014,19149,23935,26794,24109,26610,26333,25928,25861,23891,25015,28093,28395,28519,26452,73761,28793,31625,21101,44330,33481,16236,17913,22151,26661,44253,58083,81936,25245,19145,24064,27316,26293,19891,19226,18575,24058,20941,24169,51417,32036,30461,27315,49619,33067,20031,23079,25510,25650,24049,24047,22326,27115,24435,20410,27858,28272,25707,22500,20164,19807,18822,18614,72798,30494,35350,23541,53767,35114,20887,20294,24806,26914,29191,25112,25150,23427,28286,27651,26034,39784,86807,44057,43143,32836,23712,18525,58168,27361,35195,22946,48542,35580,20127,21984,24213,25811,28564,19972,19125,32392,31459,25657,21294,18129,18480,17542,18377,19661,19648,17336,48245,25825,28590,23273,48742,34050,18302,18991,24919,22304,21214,21468,23821,24717,27653,24277,33925,23729,25090,28532,24517,22469,33863,25203,63266,24672,27018,20428,42968,31622,19419,17730,21249,20082,22940,21080,24074,19971,23877,21714,24634,21733,24413,25513,19710,20775,21700,45391,62784,25006,33271,22001,43361,36023,19151,18326,21990,21504,22034,20655,23141,23596,22561,20211,20608,21186,23847,20536,56658,40690,28497,25876]}
+;
+</script>
+<script>
+(function () {
+  const CAPACITY = [[1, "Largest delivery", "most optimistic"], [2, "2nd largest", "default"], [3, "3rd largest", "cautious"], [5, "5th largest", "about the median"]];
+  const state = { capacity: 2, safety: 0 };
+  const $ = id => document.getElementById(id);
+  const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const pct = (x, digits = 0) => (100 * x).toFixed(digits) + "%";
+  const comma = x => Math.round(x).toLocaleString("en-US");
+  const find = (capacity, safety) => DATA.scenarios.find(s => s.capacity === capacity && Math.abs(s.safety_weeks - safety) < 1e-9);
+  const main = find(2, 0);
+
+  const box = $("capacity");
+  CAPACITY.forEach(([value, name, note]) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.dataset.value = value;
+    b.innerHTML = `${name}<br><span style="font-size:11.5px;opacity:.8">${note}</span>`;
+    b.addEventListener("click", () => { state.capacity = value; update(); });
+    box.appendChild(b);
+  });
+  $("safety").addEventListener("input", e => { state.safety = +e.target.value; update(); });
+
+  function svgIn(container, width, height) {
+    container.querySelectorAll("svg").forEach(s => s.remove());
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    svg.setAttribute("role", "img");
+    container.prepend(svg);
+    return svg;
+  }
+  function el(svg, tag, attrs, text) {
+    const e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text !== undefined) e.textContent = text;
+    svg.appendChild(e);
+    return e;
+  }
+  function tooltip(container) {
+    let t = container.querySelector(".tooltip");
+    if (!t) { t = document.createElement("div"); t.className = "tooltip"; t.hidden = true; container.appendChild(t); }
+    return t;
+  }
+  function place(t, container, x, y) {
+    const w = container.clientWidth;
+    t.style.left = Math.min(Math.max(0, x + 14), w - t.offsetWidth) + "px";
+    t.style.top = Math.max(0, y - 10) + "px";
+  }
+
+  function stockChart(scenario) {
+    const container = $("stock-chart");
+    const W = Math.max(320, container.clientWidth), H = W < 560 ? 260 : 300;
+    const m = { l: 44, r: 12, t: 10, b: 30 };
+    const svg = svgIn(container, W, H);
+    const [low, middle, high] = scenario.stock_band;
+    const top = Math.ceil(Math.max(...high, 4.5) * 2) / 2, bottom = Math.min(1.5, Math.floor(Math.min(...low) * 2) / 2);
+    const x = week => m.l + (W - m.l - m.r) * (week - 1) / 23;
+    const y = v => m.t + (H - m.t - m.b) * (1 - (v - bottom) / (top - bottom));
+    for (let v = Math.ceil(bottom); v <= top; v += 1) {
+      el(svg, "line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: css("--rule"), "stroke-width": 1 });
+      el(svg, "text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, v + " wk");
+    }
+    for (const week of [1, 6, 12, 18, 24]) el(svg, "text", { x: x(week), y: H - 8, "text-anchor": "middle" }, "week " + week);
+    let area = "";
+    high.forEach((v, i) => area += (i ? "L" : "M") + x(i + 1).toFixed(1) + "," + y(v).toFixed(1));
+    for (let i = 23; i >= 0; i--) area += "L" + x(i + 1).toFixed(1) + "," + y(low[i]).toFixed(1);
+    el(svg, "path", { d: area + "Z", fill: css("--band") });
+    el(svg, "line", { x1: m.l, x2: W - m.r, y1: y(2), y2: y(2), stroke: css("--buffer"), "stroke-width": 1.5, "stroke-dasharray": "5 4" });
+    let line = "";
+    middle.forEach((v, i) => line += (i ? "L" : "M") + x(i + 1).toFixed(1) + "," + y(v).toFixed(1));
+    el(svg, "path", { d: line, fill: "none", stroke: css("--series"), "stroke-width": 2.2, "stroke-linejoin": "round" });
+    const dot = el(svg, "circle", { r: 4, fill: css("--series"), stroke: css("--surface"), "stroke-width": 2, opacity: 0 });
+    const t = tooltip(container);
+    const hit = el(svg, "rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: "transparent" });
+    const show = evt => {
+      const r = svg.getBoundingClientRect();
+      const week = Math.max(1, Math.min(24, Math.round(((evt.clientX - r.left) * W / r.width - m.l) / (W - m.l - m.r) * 23) + 1));
+      dot.setAttribute("cx", x(week)); dot.setAttribute("cy", y(middle[week - 1])); dot.setAttribute("opacity", 1);
+      t.innerHTML = `<div class="t-head">End of week ${week}</div>
+        <div class="t-row"><span>Median stock</span><b>${middle[week - 1].toFixed(2)} wk</b></div>
+        <div class="t-row"><span>5th to 95th</span><b>${low[week - 1].toFixed(2)}–${high[week - 1].toFixed(2)}</b></div>`;
+      t.hidden = false;
+      place(t, container, x(week) * r.width / W, evt.clientY - r.top);
+    };
+    hit.addEventListener("pointermove", show); hit.addEventListener("pointerdown", show);
+    hit.addEventListener("pointerleave", () => { t.hidden = true; dot.setAttribute("opacity", 0); });
+  }
+
+  function historyChart() {
+    const container = $("history-chart");
+    const W = Math.max(320, container.clientWidth), H = W < 560 ? 220 : 260;
+    const m = { l: 56, r: 12, t: 10, b: 30 };
+    const svg = svgIn(container, W, H);
+    const values = DATA.history, top = 90000;
+    const x = i => m.l + (W - m.l - m.r) * i / (values.length - 1);
+    const y = v => m.t + (H - m.t - m.b) * (1 - v / top);
+    for (const v of [0, 30000, 60000, 90000]) {
+      el(svg, "line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: css("--rule"), "stroke-width": 1 });
+      el(svg, "text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, comma(v));
+    }
+    for (let c = 0; c <= 240; c += W < 560 ? 96 : 48) el(svg, "text", { x: x(Math.min(c, 239)), y: H - 8, "text-anchor": c === 240 ? "end" : "middle" }, "week " + (c || 1));
+    el(svg, "line", { x1: m.l, x2: W - m.r, y1: y(28200), y2: y(28200), stroke: css("--buffer"), "stroke-width": 1.5, "stroke-dasharray": "5 4" });
+    let line = "";
+    values.forEach((v, i) => line += (i ? "L" : "M") + x(i).toFixed(1) + "," + y(v).toFixed(1));
+    el(svg, "path", { d: line, fill: "none", stroke: css("--series"), "stroke-width": 1.4, "stroke-linejoin": "round" });
+    const dot = el(svg, "circle", { r: 4, fill: css("--series"), stroke: css("--surface"), "stroke-width": 2, opacity: 0 });
+    const t = tooltip(container);
+    const hit = el(svg, "rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: "transparent" });
+    const show = evt => {
+      const r = svg.getBoundingClientRect();
+      const i = Math.max(0, Math.min(239, Math.round(((evt.clientX - r.left) * W / r.width - m.l) / (W - m.l - m.r) * 239)));
+      dot.setAttribute("cx", x(i)); dot.setAttribute("cy", y(values[i])); dot.setAttribute("opacity", 1);
+      t.innerHTML = `<div class="t-head">Week ${i + 1} · cycle week ${(i % 24) + 1}</div>
+        <div class="t-row"><span>Deliveries</span><b>${comma(values[i])} m³</b></div>
+        <div class="t-row"><span>Covers production</span><b>${values[i] >= 28200 ? "yes" : "no"}</b></div>`;
+      t.hidden = false;
+      place(t, container, x(i) * r.width / W, evt.clientY - r.top);
+    };
+    hit.addEventListener("pointermove", show); hit.addEventListener("pointerdown", show);
+    hit.addEventListener("pointerleave", () => { t.hidden = true; dot.setAttribute("opacity", 0); });
+  }
+
+  let current = null;
+  function update() {
+    box.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.value === state.capacity)));
+    $("capacity-out").textContent = CAPACITY.find(c => c[0] === state.capacity)[1].toLowerCase();
+    $("safety").value = state.safety;
+    $("safety-out").textContent = state.safety === 0 ? "none" : state.safety + " week";
+    current = find(state.capacity, state.safety);
+    const growth = current.largest_weekly_production / 28200 - 1;
+    if (!current.feasible) {
+      $("results").innerHTML = `<p class="notice">No set of suppliers can keep two weeks of stock at 28,200 m³ a week under this assumption. The most the 402 suppliers could support is <b>${comma(current.largest_weekly_production)} m³</b> a week, ${pct(-growth)} below current production.</p>`;
+      $("stock-block").hidden = true; $("suppliers-block").hidden = true;
+      return;
+    }
+    $("stock-block").hidden = false; $("suppliers-block").hidden = false;
+    const rows = [
+      ["Suppliers needed", String(current.suppliers.length), "Default plan: " + main.suppliers.length],
+      ["Kept two weeks of stock, all 24 weeks", pct(current.kept_two_week_buffer, 1), "Default plan: " + pct(main.kept_two_week_buffer, 1)],
+      ["Production never stopped", pct(current.never_ran_out, 1), "Out of 2,000 runs"],
+      ["Material mix, A / B / C", `${Math.round(100 * current.share_A)}/${Math.round(100 * current.share_B)}/${Math.round(100 * current.share_C)}`, "Percent of delivered m³"],
+      ["Planned transport loss", pct(current.planned_loss_rate, 2), "Lowest-loss transporters first"],
+      ["Most the plant could produce", comma(current.largest_weekly_production) + " m³", (growth >= 0 ? "+" : "") + pct(growth) + " vs 28,200 a week"]
+    ];
+    $("results").innerHTML = `<dl class="ledger">${rows.map(([k, v, c]) => `<div><dt>${k}</dt><dd>${v}</dd><span class="compare">${c}</span></div>`).join("")}</dl>`;
+    $("supplier-list").innerHTML = current.suppliers.slice().sort((a, b) => b.share - a.share)
+      .map(s => `<span>${s.supplier} · ${s.material} · ${pct(s.share, 1)}</span>`).join("");
+    stockChart(current);
+  }
+
+  let width = 0;
+  new ResizeObserver(() => {
+    const w = $("history-chart").clientWidth;
+    if (Math.abs(w - width) > 4) { width = w; historyChart(); if (current && current.feasible) stockChart(current); }
+  }).observe(document.querySelector(".page"));
+  const redraw = () => { historyChart(); if (current && current.feasible) stockChart(current); };
+  if (window.matchMedia) window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redraw);
+  new MutationObserver(redraw).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+  update();
+  historyChart();
+})();
+</script>
+</body>
+</html>
