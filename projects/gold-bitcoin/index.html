@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Gold and Bitcoin Backtester · Xuxiang Wang</title>
+<title>Trading Strategies · Xuxiang Wang</title>
 <meta name="description" content="Interactive backtest for 2022 MCM Problem C: choose a risk level, a bitcoin limit and commissions, and rerun five years of daily gold and bitcoin trading.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -125,8 +125,8 @@ footer { font-size: 12.5px; color: var(--ink-3); border-top: 1px solid var(--rul
 
   <header>
     <div class="eyebrow">2022 MCM Problem C · Honorable Mention · reproducible analysis</div>
-    <h1>Pick a risk level and see what five years of daily trading would have returned</h1>
-    <p class="lede">Start with <strong>$1,000 on 9/11/2016</strong>. Every day the strategy looks only at prices up to that day and decides whether to buy, hold or sell gold and bitcoin, paying <strong>1% per gold trade and 2% per bitcoin trade</strong>. Gold trades only on days the London market sets a price. Change the settings below and the full 1,826-day backtest reruns in your browser.</p>
+    <h1>Trading Strategies</h1>
+    <p class="lede">The problem: starting with <strong>$1,000 on 9/11/2016</strong>, trade gold and bitcoin every day until 9/10/2021, using only the prices observed up to that day. Each purchase or sale costs <strong>1% of the amount for gold and 2% for bitcoin</strong>, and gold trades only on days the London market sets a price. The method is a cost-aware mean-variance allocation with momentum estimates. Change the settings below to rerun the full 1,826-day backtest in the browser.</p>
   </header>
 
   <section class="controls" aria-label="Strategy settings">
@@ -150,7 +150,7 @@ footer { font-size: 12.5px; color: var(--ink-3); border-top: 1px solid var(--rul
 
   <section aria-labelledby="results-title" class="chart-block">
     <div class="chart-head">
-      <h2 id="results-title">Your strategy on 9/10/2021</h2>
+      <h2 id="results-title">Results on 9/10/2021</h2>
       <div class="status" id="status" aria-live="polite"></div>
     </div>
     <dl class="ledger" id="ledger"></dl>
@@ -167,22 +167,22 @@ footer { font-size: 12.5px; color: var(--ink-3); border-top: 1px solid var(--rul
   <div class="two-col">
     <section class="chart-block" aria-labelledby="alloc-title">
       <div class="chart-head">
-        <h2 id="alloc-title">Where the money sat</h2>
+        <h2 id="alloc-title">Allocation</h2>
         <div class="legend"><span><i class="box" style="background:var(--series-bitcoin)"></i>Bitcoin</span><span><i class="box" style="background:var(--series-gold)"></i>Gold</span><span><i class="box" style="background:var(--cash)"></i>Cash</span></div>
       </div>
       <div class="chart" id="alloc-chart"></div>
     </section>
     <section class="chart-block" aria-labelledby="map-title">
       <div class="chart-head">
-        <h2 id="map-title">Risk and reward of 24 preset choices</h2>
-        <div class="legend"><span><i class="box" style="background:var(--ink-3)"></i>Preset (6 risk levels × 4 bitcoin limits)</span><span><i class="box" style="background:var(--series-strategy)"></i>Your choice</span><span><i class="box" style="background:var(--series-bitcoin)"></i>Buy and hold</span></div>
+        <h2 id="map-title">Risk and return of 24 preset settings</h2>
+        <div class="legend"><span><i class="box" style="background:var(--ink-3)"></i>Preset (6 risk levels × 4 bitcoin limits)</span><span><i class="box" style="background:var(--series-strategy)"></i>Selected settings</span><span><i class="box" style="background:var(--series-bitcoin)"></i>Buy and hold</span></div>
       </div>
       <div class="chart" id="map-chart"></div>
     </section>
   </div>
 
   <section class="findings" aria-labelledby="findings-title">
-    <h2 id="findings-title">What the analysis found</h2>
+    <h2 id="findings-title">Findings</h2>
     <p><strong>The strategy did not beat buying and holding bitcoin.</strong> Bitcoin rose about 75-fold in these five years. Holding it turned $1,000 into $73,127, but at one point the position was down 83% from its peak. At the default settings the strategy ended at $21,064 with a worst drop of 46% and almost the same return per unit of risk (Sharpe ratio 1.50 vs 1.49).</p>
     <p><strong>Risk tolerance and the bitcoin limit trade final value for smaller losses.</strong> Every step toward caution lowers both the final value and the worst drop. The map above shows the trade-off.</p>
     <p class="note">A trader who knew every future price could have reached about $33.7 billion, which is why very large reported returns usually mean future prices leaked into the decisions.</p>
@@ -605,12 +605,12 @@ function summarize(value) {
     $("ledger").innerHTML = rows.map(([k, v, c]) => `<div><dt>${k}</dt><dd>${v}</dd><span class="compare">${c}</span></div>`).join("");
     lastRun = run;
     lastSeries = [
-      { name: "Your strategy", values: run.value, color: "--series-strategy", main: true },
+      { name: "Strategy", values: run.value, color: "--series-strategy", main: true },
       { name: "Hold bitcoin", values: bitcoinHold, color: "--series-bitcoin" },
       { name: "Hold 50/50", values: splitHold, color: "--series-split" },
       { name: "Hold gold", values: goldHold, color: "--series-gold" }
     ];
-    lastCurrent = { label: "Your choice", drawdown: s.maxDrawdown, value: s.finalValue };
+    lastCurrent = { label: "Selected settings", drawdown: s.maxDrawdown, value: s.finalValue };
     lastBench = [["Hold bitcoin", bitcoinHold], ["Hold 50/50", splitHold]].map(([n, v]) => {
       const q = summarize(v); return { label: n, drawdown: q.maxDrawdown, value: q.finalValue };
     });

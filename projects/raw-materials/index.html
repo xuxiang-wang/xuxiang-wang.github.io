@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Raw Material Planner · Xuxiang Wang</title>
+<title>Ordering and Transportation of Raw Materials · Xuxiang Wang</title>
 <meta name="description" content="2021 CUMCM Problem C: choose how cautiously to read supplier capacity and how much safety stock to plan, and see how many suppliers a plant needs and how often its stock holds up.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -103,11 +103,11 @@ footer { font-size: 12.5px; color: var(--ink-3); border-top: 1px solid var(--rul
 
   <header>
     <div class="eyebrow">2021 CUMCM Problem C · Second Prize · reproducible analysis</div>
-    <h1>How many suppliers keep a plant running when supply is uncertain?</h1>
-    <p class="lede">A plant makes <strong>28,200 m³ of board a week</strong> from three raw materials and must always hold <strong>two weeks of stock</strong>. It can order from 402 suppliers and ship through 8 transporters, each carrying up to 6,000 m³ a week. History shows how much each supplier delivered, but not how much it could have delivered, so the plan depends on how cautiously that history is read. Choose below, and the page shows the 24-week plan with the fewest suppliers and how its stock held up in 2,000 simulations.</p>
+    <h1>Ordering and Transportation of Raw Materials for Production Enterprises</h1>
+    <p class="lede">The problem: a plant that makes <strong>28,200 m³ of product a week</strong> from three raw materials must keep at least <strong>two weeks of stock</strong>. It orders from 402 suppliers and ships through 8 transporters, each carrying up to 6,000 m³ a week. Past records show how much each supplier delivered, not how much it could have delivered, so the plan depends on how that history is read. The plan below uses the fewest suppliers that meet the stock rule, with its stock simulated 2,000 times. Change the settings below to see how the answer depends on supplier capacity and safety stock.</p>
   </header>
 
-  <section class="controls" aria-label="Planning choices">
+  <section class="controls" aria-label="Settings">
     <div class="control">
       <div class="control-label"><span id="capacity-label">Supplier capacity</span><output id="capacity-out"></output></div>
       <div class="segments" role="group" aria-labelledby="capacity-label" id="capacity"></div>
@@ -121,13 +121,13 @@ footer { font-size: 12.5px; color: var(--ink-3); border-top: 1px solid var(--rul
   </section>
 
   <section class="chart-block" aria-labelledby="plan-title">
-    <div class="chart-head"><h2 id="plan-title">The plan with the fewest suppliers</h2></div>
+    <div class="chart-head"><h2 id="plan-title">Plan with the fewest suppliers</h2></div>
     <div id="results"></div>
   </section>
 
   <section class="chart-block" aria-labelledby="stock-title" id="stock-block">
     <div class="chart-head">
-      <h2 id="stock-title">Simulated stock over the 24 weeks</h2>
+      <h2 id="stock-title">Simulated stock</h2>
       <div class="legend"><span><i style="background:var(--series)"></i>Median of 2,000 runs</span><span><i class="box" style="background:var(--band)"></i>5th to 95th percentile</span><span><i style="background:var(--buffer)"></i>Two-week rule</span></div>
     </div>
     <div class="chart" id="stock-chart"></div>
@@ -141,14 +141,14 @@ footer { font-size: 12.5px; color: var(--ink-3); border-top: 1px solid var(--rul
 
   <section class="chart-block" aria-labelledby="history-title">
     <div class="chart-head">
-      <h2 id="history-title">What the 402 suppliers delivered, 240 weeks</h2>
+      <h2 id="history-title">Supplier deliveries, 240 weeks</h2>
       <div class="legend"><span><i style="background:var(--series)"></i>Deliveries, in m³ of product</span><span><i style="background:var(--buffer)"></i>Weekly production, 28,200</span></div>
     </div>
     <div class="chart" id="history-chart"></div>
   </section>
 
   <section class="findings" aria-labelledby="findings-title">
-    <h2 id="findings-title">What the analysis found</h2>
+    <h2 id="findings-title">Findings</h2>
     <p><strong>Past supply rarely covered production.</strong> Deliveries made enough for 28,200 m³ in only 28% of the 240 weeks. Large deliveries repeat every 24 weeks, and orders far above a supplier's usual amount were simply not filled.</p>
     <p><strong>The capacity assumption drives every answer.</strong> Reading each supplier's history more cautiously raises the number of suppliers needed from 14 to 23 to 36, and lowers the most the plant could produce from 40,889 to 34,396 to 30,245 m³ a week. If suppliers can only repeat their typical deliveries, 28,200 cannot be sustained at all.</p>
     <p><strong>A little safety stock buys a lot of reliability.</strong> Under the default assumption, the 23-supplier plan never stops production in simulation, but keeps the full two-week buffer in only 78% of runs. Planning a quarter-week of extra stock raises that to 95% with the same suppliers.</p>

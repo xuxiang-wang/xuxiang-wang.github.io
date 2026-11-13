@@ -67,15 +67,6 @@ section { display: flex; flex-direction: column; gap: 20px; }
 <body>
 <div class="wrap">
 
-<nav class="site-nav" aria-label="Site">
-  <a class="name" href="./">Xuxiang Wang</a>
-  <div class="links">
-    <a href="#research">Research</a>
-    <a href="#projects">Projects</a>
-    <a href="https://github.com/xuxiang-wang">GitHub</a>
-  </div>
-</nav>
-
 <header>
   <h1>Xuxiang Wang</h1>
   <p class="role">PhD student in Biostatistics, University of Nebraska Medical Center</p>
@@ -92,22 +83,16 @@ section { display: flex; flex-direction: column; gap: 20px; }
 
   <article>
     <div class="meta"><span>JAMA Network Open · accepted</span><span>Second author</span><span>Public data · code</span></div>
-    <h3>Rural-urban disparities in clinical trial availability in the US, 2000–2025</h3>
-    <p>Across 3,144 counties, rural counties had about one-third the per-capita availability of completed trials of urban counties (adjusted rate ratio <span class="num">0.31</span>, 95% CI 0.26–0.38). The gap narrowed from 2000 to 2025 but never closed.</p>
+    <h3>Rural-Urban Disparities in Clinical Trial Availability in the US, 2000–2025</h3>
+    <p>Rural counties had about one-third the per-capita availability of urban counties (adjusted RR, 0.31; 95% CI, 0.26-0.38), with the largest gap in the South (RR, 0.19; 95% CI, 0.14-0.25) and the smallest in the Northeast (RR, 0.54; 95% CI, 0.26-1.11). In this national analysis, rural US counties had persistently lower per-capita trial availability, consistent with research-infrastructure geography rather than social vulnerability.</p>
     <a class="more" href="https://github.com/Anzalone-Lab/rural-urban-clinical-trials-study">Code and data</a>
   </article>
 
   <article>
     <div class="meta"><span>Learning Health Systems · under review</span><span>First author</span><span>Restricted data · public code</span></div>
-    <h3>A reusable tobacco phenotype for the OMOP Common Data Model</h3>
-    <p>A point-in-time smoking-status algorithm built from standard concept sets, validated against survey self-report in 120,624 All of Us participants: moderate agreement for current smoking (kappa <span class="num">0.45</span>), good agreement for smoking duration (ICC <span class="num">0.78</span>).</p>
+    <h3>A Computable OMOP Tobacco-Use Phenotype: Development and Validation Against All of Us Survey Data</h3>
+    <p>This study presents an openly specified, standards-based, reproducible tobacco phenotype within the OMOP CDM, showing moderate agreement with self-reported survey data. For current smokers, kappa was 0.451 (95% CI 0.446-0.457; sensitivity 0.605, specificity 0.882, PPV 0.506). Agreement was good for smoking duration (ICC = 0.78) and poor for cigarettes per day (ICC = 0.19).</p>
     <a class="more" href="https://github.com/xuxiang-wang/AoU-OMOP-Tobacco-Phenotyping">Concept sets and code</a>
-  </article>
-
-  <article>
-    <div class="meta"><span>In progress</span><span>Restricted data</span></div>
-    <h3>Rurality and access to solid-organ transplantation</h3>
-    <p>Do rural patients drop out at each step from referral to transplant, and does it affect survival? A competing-risk study design in Epic Cosmos covering kidney, liver and pancreas referrals, 2014–2025.</p>
   </article>
 </section>
 
@@ -115,15 +100,15 @@ section { display: flex; flex-direction: column; gap: 20px; }
   <h2 id="projects-title">Projects</h2>
   <div class="cards">
     <a class="card" href="projects/gold-bitcoin/">
-      <span class="meta">MCM 2022 · Honorable Mention · public data</span>
-      <span class="title">Trading gold and bitcoin without hindsight</span>
-      <span class="summary">A cost-aware daily strategy turned $1,000 into <span class="num">$21,064</span> with half the drawdown of holding bitcoin. Choose your own risk level and rerun the backtest.</span>
+      <span class="meta">2022 MCM Problem C · Honorable Mention · public data</span>
+      <span class="title">Trading Strategies</span>
+      <span class="summary">Daily trading of gold and bitcoin from 2016 to 2021 with 1–2% commissions, using only past prices. A cost-aware mean-variance strategy grew $1,000 to <span class="num">$21,064</span> with half the drawdown of holding bitcoin.</span>
       <span class="go">Interactive backtest</span>
     </a>
     <a class="card" href="projects/raw-materials/">
-      <span class="meta">CUMCM 2021 · Second Prize · public data</span>
-      <span class="title">Ordering raw materials when supply is uncertain</span>
-      <span class="summary">From 402 suppliers, 23 can keep a plant running with two weeks of stock, and output can rise <span class="num">22%</span>. Choose how cautious to be and see what the plan needs.</span>
+      <span class="meta">2021 CUMCM Problem C · Second Prize · public data</span>
+      <span class="title">Ordering and Transportation of Raw Materials for Production Enterprises</span>
+      <span class="summary">Ordering from 402 suppliers and shipping through 8 transporters while keeping two weeks of stock. The minimum is 23 suppliers, and weekly production could rise <span class="num">22%</span>.</span>
       <span class="go">Interactive plan</span>
     </a>
   </div>
